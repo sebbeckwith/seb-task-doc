@@ -1,87 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seb's Task Dock</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Kanban Task Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 </head>
-<body class="bg-gray-900 text-white font-sans">
-  <div class="container mx-auto py-6 px-4">
-    <h1 class="text-3xl font-bold mb-6">Seb's Task Dock</h1>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <h2 class="text-xl font-semibold mb-2">Today</h2>
-        <div id="today" class="bg-gray-800 p-4 rounded-xl min-h-[200px] space-y-2"></div>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
+
+  <header class="p-4 shadow bg-white">
+    <h1 class="text-2xl font-bold text-center">🧠 Seb's Task Dashboard</h1>
+  </header>
+
+  <main class="p-4 overflow-x-auto flex-1">
+    <div class="flex gap-4 justify-start min-w-full">
+
+      <!-- Columns -->
+      <div class="kanban-column" data-status="not-started">
+        <h2 class="text-lg font-semibold mb-2">Not Started</h2>
+        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
       </div>
-      <div>
-        <h2 class="text-xl font-semibold mb-2">Priority</h2>
-        <div id="priority" class="bg-gray-800 p-4 rounded-xl min-h-[200px] space-y-2"></div>
+
+      <div class="kanban-column" data-status="in-progress">
+        <h2 class="text-lg font-semibold mb-2">In Progress</h2>
+        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="in-progress"></div>
       </div>
-      <div>
-        <h2 class="text-xl font-semibold mb-2">Stuck</h2>
-        <div id="stuck" class="bg-gray-800 p-4 rounded-xl min-h-[200px] space-y-2"></div>
+
+      <div class="kanban-column" data-status="stuck">
+        <h2 class="text-lg font-semibold mb-2">Stuck</h2>
+        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="stuck"></div>
       </div>
-      <div>
-        <h2 class="text-xl font-semibold mb-2">Done</h2>
-        <div id="done" class="bg-gray-800 p-4 rounded-xl min-h-[200px] space-y-2"></div>
+
+      <div class="kanban-column" data-status="done">
+        <h2 class="text-lg font-semibold mb-2">Done ✅</h2>
+        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="done"></div>
       </div>
+
     </div>
-    <div class="mt-6">
-      <input id="taskInput" type="text" class="w-full p-2 rounded-xl bg-gray-700 border border-gray-600 text-white" placeholder="Add a task and press Enter...">
-    </div>
-  </div>
+  </main>
+
+  <footer class="bg-white p-4 border-t mt-auto flex items-center justify-center gap-2">
+    <input id="taskInput" class="border border-gray-300 rounded-lg px-4 py-2 w-1/2" type="text" placeholder="Add a task...">
+    <select id="columnSelect" class="border border-gray-300 rounded-lg px-2 py-2">
+      <option value="not-started">Not Started</option>
+      <option value="in-progress">In Progress</option>
+      <option value="stuck">Stuck</option>
+      <option value="done">Done</option>
+    </select>
+    <button onclick="addTask()" class="bg-black text-white rounded-lg px-4 py-2">Add</button>
+  </footer>
 
   <script>
-    const columns = ['today', 'priority', 'stuck', 'done'];
+    const columns = ["not-started", "in-progress", "stuck", "done"];
 
     function saveTasks() {
       const data = {};
       columns.forEach(col => {
-        const items = Array.from(document.getElementById(col).children).map(x => x.innerText);
-        data[col] = items;
+        data[col] = Array.from(document.getElementById(col).children).map(card => card.innerText);
       });
-      localStorage.setItem('taskData', JSON.stringify(data));
+      localStorage.setItem("kanbanTasks", JSON.stringify(data));
     }
 
     function loadTasks() {
-      const data = JSON.parse(localStorage.getItem('taskData') || '{}');
+      const data = JSON.parse(localStorage.getItem("kanbanTasks") || "{}");
       columns.forEach(col => {
         const container = document.getElementById(col);
-        container.innerHTML = '';
-        (data[col] || []).forEach(text => container.appendChild(createTask(text)));
+        container.innerHTML = "";
+        (data[col] || []).forEach(task => {
+          const card = createCard(task);
+          container.appendChild(card);
+        });
       });
     }
 
-    function createTask(text) {
-      const task = document.createElement('div');
-      task.className = 'bg-gray-700 p-2 rounded-md shadow hover:bg-gray-600 cursor-move';
-      task.textContent = text;
-      task.addEventListener('dblclick', () => {
-        task.remove();
-        saveTasks();
-      });
-      return task;
+    function createCard(text) {
+      const card = document.createElement("div");
+      card.className = "bg-gray-50 hover:bg-gray-100 p-3 rounded-md shadow border cursor-move";
+      card.innerText = text;
+      card.ondblclick = () => {
+        if (confirm("Delete this task?")) {
+          card.remove();
+          saveTasks();
+        }
+      };
+      return card;
     }
 
-    document.getElementById('taskInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter' && this.value.trim()) {
-        document.getElementById('today').appendChild(createTask(this.value.trim()));
-        this.value = '';
-        saveTasks();
-      }
-    });
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const col = document.getElementById("columnSelect").value;
+      if (!input.value.trim()) return;
+      const task = createCard(input.value);
+      document.getElementById(col).appendChild(task);
+      input.value = "";
+      saveTasks();
+    }
 
-    columns.forEach(id => {
-      new Sortable(document.getElementById(id), {
-        group: 'shared',
+    columns.forEach(col => {
+      new Sortable(document.getElementById(col), {
+        group: "kanban",
         animation: 150,
-        onSort: saveTasks
+        onEnd: saveTasks
       });
     });
 
     loadTasks();
   </script>
+
 </body>
 </html>
+
