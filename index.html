@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Seb's To Do</title>
+  <title>Seb's Kanban</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <style>
@@ -20,7 +20,7 @@
     }
     .low {
       border-left: 8px solid gray;
-      background-color: #f0f0f0;
+      background-color: #f4f4f4;
     }
   </style>
 </head>
@@ -33,24 +33,25 @@
   <main class="p-4 overflow-x-auto flex-1">
     <div class="flex gap-4 justify-start min-w-full">
 
+      <!-- Neutral Column Backgrounds -->
       <div class="kanban-column" data-status="not-started">
         <h2 class="text-lg font-semibold mb-2">Not Started</h2>
-        <div class="task-column bg-purple-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
       </div>
 
       <div class="kanban-column" data-status="in-progress">
         <h2 class="text-lg font-semibold mb-2">In Progress</h2>
-        <div class="task-column bg-orange-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="in-progress"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="in-progress"></div>
       </div>
 
       <div class="kanban-column" data-status="stuck">
         <h2 class="text-lg font-semibold mb-2">Stuck</h2>
-        <div class="task-column bg-red-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="stuck"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="stuck"></div>
       </div>
 
       <div class="kanban-column" data-status="done">
         <h2 class="text-lg font-semibold mb-2">Done ✅</h2>
-        <div class="task-column bg-green-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="done"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="done"></div>
       </div>
 
     </div>
