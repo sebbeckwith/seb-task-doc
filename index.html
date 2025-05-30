@@ -1,51 +1,64 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Kanban Task Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>Seb's Kanban</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+  <style>
+    .super-urgent { border-left: 4px solid red; }
+    .high { border-left: 4px solid orange; }
+    .medium { border-left: 4px solid yellow; }
+    .low { border-left: 4px solid gray; }
+  </style>
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
 
   <header class="p-4 shadow bg-white">
-    <h1 class="text-2xl font-bold text-center">🧠 Seb's Task Dashboard</h1>
+    <h1 class="text-2xl font-bold text-center">🔥 Seb's Task Kanban</h1>
   </header>
 
   <main class="p-4 overflow-x-auto flex-1">
     <div class="flex gap-4 justify-start min-w-full">
 
-      <!-- Columns -->
       <div class="kanban-column" data-status="not-started">
         <h2 class="text-lg font-semibold mb-2">Not Started</h2>
-        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
+        <div class="task-column bg-purple-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
       </div>
 
       <div class="kanban-column" data-status="in-progress">
         <h2 class="text-lg font-semibold mb-2">In Progress</h2>
-        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="in-progress"></div>
+        <div class="task-column bg-orange-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="in-progress"></div>
       </div>
 
       <div class="kanban-column" data-status="stuck">
         <h2 class="text-lg font-semibold mb-2">Stuck</h2>
-        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="stuck"></div>
+        <div class="task-column bg-red-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="stuck"></div>
       </div>
 
       <div class="kanban-column" data-status="done">
         <h2 class="text-lg font-semibold mb-2">Done ✅</h2>
-        <div class="task-column bg-white rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="done"></div>
+        <div class="task-column bg-green-100 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="done"></div>
       </div>
 
     </div>
   </main>
 
-  <footer class="bg-white p-4 border-t mt-auto flex items-center justify-center gap-2">
-    <input id="taskInput" class="border border-gray-300 rounded-lg px-4 py-2 w-1/2" type="text" placeholder="Add a task...">
-    <select id="columnSelect" class="border border-gray-300 rounded-lg px-2 py-2">
-      <option value="not-started">Not Started</option>
-      <option value="in-progress">In Progress</option>
-      <option value="stuck">Stuck</option>
-      <option value="done">Done</option>
+  <footer class="bg-white p-4 border-t mt-auto flex flex-wrap items-center justify-center gap-2">
+    <input id="taskInput" class="border border-gray-300 rounded-lg px-4 py-2 w-1/3" type="text" placeholder="What needs doing?">
+    <select id="actionType" class="border border-gray-300 rounded-lg px-2 py-2">
+      <option value="Cold Email">Cold Email</option>
+      <option value="Follow-Up Email">Follow-Up Email</option>
+      <option value="Phone Call">Phone Call</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="priority" class="border border-gray-300 rounded-lg px-2 py-2">
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+      <option value="super-urgent">🔥 Super Urgent</option>
     </select>
     <button onclick="addTask()" class="bg-black text-white rounded-lg px-4 py-2">Add</button>
   </footer>
@@ -53,10 +66,27 @@
   <script>
     const columns = ["not-started", "in-progress", "stuck", "done"];
 
+    function timeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return seconds + " sec ago";
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + " min ago";
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + " hrs ago";
+      const days = Math.floor(hours / 24);
+      if (days < 7) return days + " days ago";
+      return Math.floor(days / 7) + " weeks ago";
+    }
+
     function saveTasks() {
       const data = {};
       columns.forEach(col => {
-        data[col] = Array.from(document.getElementById(col).children).map(card => card.innerText);
+        data[col] = Array.from(document.getElementById(col).children).map(card => ({
+          text: card.querySelector(".text").innerText,
+          action: card.dataset.action,
+          priority: card.dataset.priority,
+          created: card.dataset.created
+        }));
       });
       localStorage.setItem("kanbanTasks", JSON.stringify(data));
     }
@@ -66,17 +96,38 @@
       columns.forEach(col => {
         const container = document.getElementById(col);
         container.innerHTML = "";
-        (data[col] || []).forEach(task => {
-          const card = createCard(task);
+        const tasks = (data[col] || []);
+        tasks.sort((a, b) => {
+          const priorityOrder = { "super-urgent": 0, "high": 1, "medium": 2, "low": 3 };
+          if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+            return priorityOrder[a.priority] - priorityOrder[b.priority];
+          }
+          return a.created - b.created;
+        }).forEach(task => {
+          const card = createCard(task.text, task.action, task.priority, task.created);
           container.appendChild(card);
         });
       });
     }
 
-    function createCard(text) {
+    function createCard(text, action, priority, created) {
       const card = document.createElement("div");
-      card.className = "bg-gray-50 hover:bg-gray-100 p-3 rounded-md shadow border cursor-move";
-      card.innerText = text;
+      card.className = `bg-white p-3 rounded-md shadow border cursor-move ${priority}`;
+      card.dataset.priority = priority;
+      card.dataset.action = action;
+      card.dataset.created = created || Date.now();
+
+      const title = document.createElement("div");
+      title.className = "text font-semibold";
+      title.innerText = text;
+
+      const meta = document.createElement("div");
+      meta.className = "text-sm text-gray-500 mt-1";
+      meta.innerText = `${action} • ${timeAgo(card.dataset.created)}`;
+
+      card.appendChild(title);
+      card.appendChild(meta);
+
       card.ondblclick = () => {
         if (confirm("Delete this task?")) {
           card.remove();
@@ -88,10 +139,11 @@
 
     function addTask() {
       const input = document.getElementById("taskInput");
-      const col = document.getElementById("columnSelect").value;
+      const action = document.getElementById("actionType").value;
+      const priority = document.getElementById("priority").value;
       if (!input.value.trim()) return;
-      const task = createCard(input.value);
-      document.getElementById(col).appendChild(task);
+      const task = createCard(input.value, action, priority);
+      document.getElementById("not-started").appendChild(task);
       input.value = "";
       saveTasks();
     }
@@ -100,13 +152,22 @@
       new Sortable(document.getElementById(col), {
         group: "kanban",
         animation: 150,
+        fallbackOnBody: true,
+        swapThreshold: 0.65,
         onEnd: saveTasks
       });
     });
 
     loadTasks();
+    setInterval(() => {
+      document.querySelectorAll(".task-column .text-sm").forEach(el => {
+        const card = el.closest("div");
+        el.innerText = `${card.dataset.action} • ${timeAgo(card.dataset.created)}`;
+      });
+    }, 60000);
   </script>
 
 </body>
 </html>
+
 
