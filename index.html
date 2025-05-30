@@ -1,17 +1,27 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Seb's Kanban</title>
+  <title>Seb's To Do</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <style>
-    .super-urgent { border-left: 4px solid red; }
-    .high { border-left: 4px solid orange; }
-    .medium { border-left: 4px solid yellow; }
-    .low { border-left: 4px solid gray; }
+    .super-urgent {
+      border-left: 8px solid red;
+      background-color: #ffe5e5;
+    }
+    .high {
+      border-left: 8px solid orange;
+      background-color: #fff2e0;
+    }
+    .medium {
+      border-left: 8px solid gold;
+      background-color: #fffbe0;
+    }
+    .low {
+      border-left: 8px solid gray;
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
@@ -65,6 +75,7 @@
 
   <script>
     const columns = ["not-started", "in-progress", "stuck", "done"];
+    const priorityOrder = { "super-urgent": 0, "high": 1, "medium": 2, "low": 3 };
 
     function timeAgo(timestamp) {
       const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -96,23 +107,17 @@
       columns.forEach(col => {
         const container = document.getElementById(col);
         container.innerHTML = "";
-        const tasks = (data[col] || []);
-        tasks.sort((a, b) => {
-          const priorityOrder = { "super-urgent": 0, "high": 1, "medium": 2, "low": 3 };
-          if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-            return priorityOrder[a.priority] - priorityOrder[b.priority];
-          }
-          return a.created - b.created;
-        }).forEach(task => {
+        (data[col] || []).forEach(task => {
           const card = createCard(task.text, task.action, task.priority, task.created);
           container.appendChild(card);
         });
+        sortColumn(container);
       });
     }
 
     function createCard(text, action, priority, created) {
       const card = document.createElement("div");
-      card.className = `bg-white p-3 rounded-md shadow border cursor-move ${priority}`;
+      card.className = `p-3 rounded-md shadow border cursor-move ${priority}`;
       card.dataset.priority = priority;
       card.dataset.action = action;
       card.dataset.created = created || Date.now();
@@ -143,18 +148,35 @@
       const priority = document.getElementById("priority").value;
       if (!input.value.trim()) return;
       const task = createCard(input.value, action, priority);
-      document.getElementById("not-started").appendChild(task);
+      const col = document.getElementById("not-started");
+      col.appendChild(task);
       input.value = "";
+      sortColumn(col);
       saveTasks();
     }
 
+    function sortColumn(container) {
+      const tasks = Array.from(container.children);
+      tasks.sort((a, b) => {
+        const pA = priorityOrder[a.dataset.priority] ?? 99;
+        const pB = priorityOrder[b.dataset.priority] ?? 99;
+        if (pA !== pB) return pA - pB;
+        return a.dataset.created - b.dataset.created;
+      });
+      tasks.forEach(task => container.appendChild(task));
+    }
+
     columns.forEach(col => {
-      new Sortable(document.getElementById(col), {
+      const el = document.getElementById(col);
+      new Sortable(el, {
         group: "kanban",
         animation: 150,
         fallbackOnBody: true,
         swapThreshold: 0.65,
-        onEnd: saveTasks
+        onEnd: () => {
+          sortColumn(el);
+          saveTasks();
+        }
       });
     });
 
@@ -169,5 +191,3 @@
 
 </body>
 </html>
-
-
