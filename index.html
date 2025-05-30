@@ -22,6 +22,22 @@
       border-left: 8px solid gray;
       background-color: #f4f4f4;
     }
+
+    /* Key change: scrollable columns with fixed height */
+    .task-column {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    /* Smooth scrolling in columns */
+    .task-column::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-column::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
@@ -33,7 +49,7 @@
   <main class="p-4 overflow-x-auto flex-1">
     <div class="flex gap-4 justify-start min-w-full">
 
-      <!-- Neutral Column Backgrounds -->
+      <!-- Neutral scrollable columns -->
       <div class="kanban-column" data-status="not-started">
         <h2 class="text-lg font-semibold mb-2">Not Started</h2>
         <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
