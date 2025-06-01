@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Seb's Kanban</title>
+  <title>Seb's Kanban with Notepad</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <style>
@@ -22,18 +22,13 @@
       border-left: 8px solid gray;
       background-color: #f4f4f4;
     }
-
-    /* Key change: scrollable columns with fixed height */
     .task-column {
       max-height: 70vh;
       overflow-y: auto;
     }
-
-    /* Smooth scrolling in columns */
     .task-column::-webkit-scrollbar {
       width: 6px;
     }
-
     .task-column::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 4px;
@@ -46,31 +41,39 @@
     <h1 class="text-2xl font-bold text-center">🔥 Seb's Task Kanban</h1>
   </header>
 
-  <main class="p-4 overflow-x-auto flex-1">
-    <div class="flex gap-4 justify-start min-w-full">
-
-      <!-- Neutral scrollable columns -->
+  <main class="p-4 overflow-hidden flex-1 flex gap-6">
+    <!-- Kanban Section -->
+    <div class="flex gap-3 overflow-x-auto flex-grow-[3]">
       <div class="kanban-column" data-status="not-started">
         <h2 class="text-lg font-semibold mb-2">Not Started</h2>
-        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="not-started"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[240px] max-w-xs" id="not-started"></div>
       </div>
 
       <div class="kanban-column" data-status="in-progress">
         <h2 class="text-lg font-semibold mb-2">In Progress</h2>
-        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="in-progress"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[240px] max-w-xs" id="in-progress"></div>
       </div>
 
       <div class="kanban-column" data-status="stuck">
         <h2 class="text-lg font-semibold mb-2">Stuck</h2>
-        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="stuck"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[240px] max-w-xs" id="stuck"></div>
       </div>
 
       <div class="kanban-column" data-status="done">
         <h2 class="text-lg font-semibold mb-2">Done ✅</h2>
-        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[250px] max-w-xs" id="done"></div>
+        <div class="task-column bg-gray-50 rounded-xl p-2 shadow space-y-2 min-w-[240px] max-w-xs" id="done"></div>
       </div>
-
     </div>
+
+    <!-- Notepad Section -->
+    <aside class="flex flex-col bg-white shadow rounded-xl p-4 w-[300px] flex-grow max-h-[70vh]">
+      <h2 class="text-lg font-bold mb-2">📝 Notepad</h2>
+      <textarea id="notepad" class="flex-1 w-full border border-gray-300 rounded p-2 resize-none mb-2" placeholder="Jot thoughts, email drafts, or ideas..."></textarea>
+      <div class="flex justify-between items-center text-sm text-gray-500 mb-2">
+        <span id="noteStatus">Last updated: never</span>
+        <button onclick="clearNotepad()" class="text-red-600 hover:underline">Clear</button>
+      </div>
+    </aside>
   </main>
 
   <footer class="bg-white p-4 border-t mt-auto flex flex-wrap items-center justify-center gap-2">
@@ -196,6 +199,31 @@
         }
       });
     });
+
+    // Notepad functions
+    const notepad = document.getElementById("notepad");
+    const noteStatus = document.getElementById("noteStatus");
+
+    notepad.value = localStorage.getItem("kanbanNotepad") || "";
+    updateNoteStatus();
+
+    notepad.addEventListener("input", () => {
+      localStorage.setItem("kanbanNotepad", notepad.value);
+      updateNoteStatus();
+    });
+
+    function clearNotepad() {
+      if (confirm("Clear all notes?")) {
+        notepad.value = "";
+        localStorage.setItem("kanbanNotepad", "");
+        updateNoteStatus();
+      }
+    }
+
+    function updateNoteStatus() {
+      const timestamp = new Date().toLocaleTimeString();
+      noteStatus.textContent = "Last updated: " + timestamp;
+    }
 
     loadTasks();
     setInterval(() => {
